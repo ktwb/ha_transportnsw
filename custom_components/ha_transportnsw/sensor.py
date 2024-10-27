@@ -39,6 +39,7 @@ CONF_ROUTE_FILTER_DEFAULT = ''
 CONF_INCLUDE_ALERTS_DEFAULT = 'none'
 
 ATTR_DUE_IN = 'due in'
+ATTR_LEAVE_IN = 'leave in'
 ATTR_ORIGIN_STOP_ID = 'origin_stop_id'
 ATTR_ORIGIN_NAME = 'origin_name'
 ATTR_ORIGIN_DETAIL = 'origin_detail'
@@ -182,6 +183,7 @@ class TransportNSWv2Sensor(Entity):
         self._state = None
         self._icon = ICONS[None]
         self._alerts = None
+        self._waittime = trip_wait_time
 
     @property
     def name(self):
@@ -206,6 +208,10 @@ class TransportNSWv2Sensor(Entity):
                     ATTR_DUE_IN: self._times[ATTR_DUE_IN],
                     ATTR_ARRIVAL_TIME: self._times[ATTR_ARRIVAL_TIME],
                     ATTR_CHANGES: self._times[ATTR_CHANGES]
+#                   Add the new attribute, time minus X (self._x_variable)
+                    due_in_time = int(self._times[ATTR_DUE_IN])  # Assuming ATTR_DUE_IN is in minutes?
+                    ATTR_LEAVE_IN = max(due_in_time - self._waittime, 0)  # Ensure it doesn't go below 0
+                    attributes['ATTR_LEAVE_IN'] = adjusted_due_in  # New attribute
                 }
 
             if self._return_info == 'medium' or self._return_info == 'verbose':
@@ -226,7 +232,7 @@ class TransportNSWv2Sensor(Entity):
                     ATTR_ORIGIN_TRANSPORT_NAME: self._times[ATTR_ORIGIN_TRANSPORT_NAME],
                     ATTR_REAL_TIME_TRIP_ID: self._times[ATTR_REAL_TIME_TRIP_ID]
                 })
-
+           
 #            if self._include_realtime_location == True:
             attrTemp.update({
                 ATTR_LATITUDE: self._times[ATTR_LATITUDE],
